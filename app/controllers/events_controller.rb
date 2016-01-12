@@ -6,6 +6,12 @@ class EventsController < ApplicationController
   def index
     # 分页机制
     @events = Event.page(params[:page]).per(5)
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml { render :xml => @events.to_xml }
+      format.json { render :json => @events.to_json }
+      format.atom { @feed_title = "My event list" } # index.atom.builder
+    end
   end
 
   def new
@@ -15,7 +21,7 @@ class EventsController < ApplicationController
   def create
     @event = Event.new(event_params)
     if @event.save
-      redirect_to :action => :index
+      redirect_to events_url 
       flash[:notice] = "event was successfully created"
     else
       render :action => :new
@@ -23,7 +29,12 @@ class EventsController < ApplicationController
   end
 
   def show
-    @page_title = @event.name
+    @event = Event.find(params[:id])
+    respond_to do |format|
+      format.html { @page_title = @event.name } # show.html.erb
+      format.xml # show.xml.builder
+      format.json { render :json => { id: @event.id, name: @event.name }.to_json }
+    end
   end
 
   def edit
@@ -31,7 +42,7 @@ class EventsController < ApplicationController
 
   def update
     if @event.update(event_params)
-      redirect_to :action => :show, :id => @event
+      redirect_to event_url(@event)
       flash[:notice] = "event was successfully created"
     else
       render :action => :edit
